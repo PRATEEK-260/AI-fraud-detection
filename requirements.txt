@@ -1,0 +1,8 @@
+# Day-0 core. Remaining deps (streamlit, anthropic, networkx, python-louvain,
+# textstat, opencv) get added as their agents are built. Pin versions on Day 3
+# per IMPLEMENTATION_PLAN.md §3.
+pandas
+numpy
+scikit-learn
+xgboost
+pyarrow

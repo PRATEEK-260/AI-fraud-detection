@@ -1,0 +1,113 @@
+{
+  "agent": "spike_sentinel",
+  "generated_at": "2026-09-02T12:13:48.483786+00:00",
+  "data": {
+    "n_fit": 1167007,
+    "n_valid": 129668,
+    "n_heldout": 555719,
+    "fraud_rate_heldout": 0.00386,
+    "users_limited_to": null
+  },
+  "thresholds": {
+    "model": 0.9453,
+    "ensemble": 0.6729
+  },
+  "results": {
+    "rules_only": {
+      "precision": 0.0477,
+      "recall": 0.7203,
+      "f1": 0.0895,
+      "tp": 1545,
+      "fp": 30844,
+      "fn": 600,
+      "tn": 522730,
+      "pr_auc": 0.0464
+    },
+    "xgboost": {
+      "precision": 0.9488,
+      "recall": 0.89,
+      "f1": 0.9185,
+      "tp": 1909,
+      "fp": 103,
+      "fn": 236,
+      "tn": 553471,
+      "pr_auc": 0.9626
+    },
+    "ensemble": {
+      "precision": 0.9138,
+      "recall": 0.9049,
+      "f1": 0.9093,
+      "tp": 1941,
+      "fp": 183,
+      "fn": 204,
+      "tn": 553391,
+      "pr_auc": 0.8839
+    }
+  },
+  "rule_diagnostics_validation": {
+    "velocity_burst": {
+      "hits": 2814,
+      "hit_rate": 0.0217,
+      "precision": 0.0526,
+      "recall": 0.1779
+    },
+    "amount_spike": {
+      "hits": 2808,
+      "hit_rate": 0.02166,
+      "precision": 0.0527,
+      "recall": 0.1779
+    },
+    "high_amount": {
+      "hits": 2192,
+      "hit_rate": 0.0169,
+      "precision": 0.1971,
+      "recall": 0.5192
+    },
+    "night_high_amount": {
+      "hits": 1351,
+      "hit_rate": 0.01042,
+      "precision": 0.1399,
+      "recall": 0.2272
+    }
+  },
+  "latency_ms_per_tx": 0.000785,
+  "top_features": [
+    [
+      "amt_log",
+      0.45590001344680786
+    ],
+    [
+      "hour",
+      0.13050000369548798
+    ],
+    [
+      "amt_ratio",
+      0.11069999635219574
+    ],
+    [
+      "category_te",
+      0.1006999984383583
+    ],
+    [
+      "is_night",
+      0.05939999967813492
+    ],
+    [
+      "amt_zscore",
+      0.03590000048279762
+    ],
+    [
+      "merchant_te",
+      0.026599999517202377
+    ],
+    [
+      "minutes_since_prev_log",
+      0.023099999874830246
+    ]
+  ],
+  "cases_written": 2124,
+  "decisions": {
+    "block": 1983,
+    "escalate": 141
+  }
+}
