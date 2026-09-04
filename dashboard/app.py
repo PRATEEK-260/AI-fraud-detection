@@ -103,7 +103,10 @@ with tab_cases:
             "Decision", ["block", "escalate", "allow"],
             default=["block", "escalate", "allow"])
         min_conf = st.slider("Minimum confidence", 0.0, 1.0, 0.0, 0.05)
-        search = st.text_input("Search reasoning text", "")
+        search = st.text_input("Search cases", "",
+                               help="Matches entity id, case id, or reasoning "
+                                    "text — e.g. a cluster id, a session id, "
+                                    "or an amount")
 
         view = df[
             df["source_agent"].isin(agents)
@@ -111,8 +114,16 @@ with tab_cases:
             & (df["confidence"] >= min_conf)
         ]
         if search:
-            view = view[view["reasoning_text"].str.contains(
-                search, case=False, na=False)]
+            # Search the identifiers as well as the narrative: looking up a
+            # known entity is the first thing an analyst does, and the entity
+            # id is often the only handle they have (a cluster id, a session
+            # id from an alert). Text-only search silently returned nothing
+            # for those.
+            haystack = (view["entity_id"].fillna("") + " "
+                        + view["case_id"].fillna("") + " "
+                        + view["reasoning_text"].fillna(""))
+            view = view[haystack.str.contains(search, case=False, na=False,
+                                              regex=False)]
 
         st.caption(f"{len(view):,} matching cases")
         st.dataframe(
