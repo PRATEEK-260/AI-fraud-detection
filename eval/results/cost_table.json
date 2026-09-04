@@ -29,6 +29,32 @@
         "false_negative": "a ring is not one loss but a stream: a missed cluster keeps transacting until caught by another control. Sized as ~5 accounts x several transactions before independent detection."
       }
     },
+    "checkout_guard": {
+      "entity": "checkout session",
+      "false_positive_inr": 1600.0,
+      "false_negative_inr": 11000.0,
+      "fn_to_fp_ratio": 6.88,
+      "policy": "auto-block permitted at high confidence",
+      "false_positive_effect": "a legitimate agent-assisted or hurried human checkout is interrupted",
+      "false_negative_effect": "an agent transacts outside the authority its owner granted",
+      "assumptions": {
+        "false_positive": "a step-up challenge on a good session costs conversion plus support contact. Deliberately priced ABOVE a Spike Sentinel false positive: wrongly blocking an agent a customer authorised breaks a delegated workflow they set up on purpose, and agent commerce is exactly the behaviour a payments company wants to encourage.",
+        "false_negative": "the owner disputes a charge they never authorised, so the loss is the transaction plus a chargeback plus the trust cost of a mandate that did not hold. A breached mandate also tends to repeat until revoked."
+      }
+    },
+    "document_forensics": {
+      "entity": "KYC document image",
+      "false_positive_inr": 3100.0,
+      "false_negative_inr": 6200.0,
+      "fn_to_fp_ratio": 2.0,
+      "policy": "escalate to a human rather than auto-block \u2014 a wrong block costs too much relative to a miss",
+      "false_positive_effect": "a genuine customer's identity document is rejected as forged",
+      "false_negative_effect": "a tampered identity document passes KYC",
+      "assumptions": {
+        "false_positive": "onboarding abandonment plus manual re-review, and the customer is accused of forgery on the evidence of a compression artifact. Priced high on purpose: ELA false-positives on legitimately re-saved or phone-compressed documents are common, so this agent must never auto-reject.",
+        "false_negative": "downstream account-takeover and mule-account risk rather than a direct loss at onboarding; a single forged KYC can open a channel used repeatedly."
+      }
+    },
     "content_forensics": {
       "entity": "document / dispute narrative",
       "false_positive_inr": 2400.0,
@@ -61,6 +87,18 @@
       "fn": 33,
       "expected_cost_inr": 216000.0,
       "detector": "logistic regression (operating detector)"
+    },
+    "checkout_guard": {
+      "fp": 9,
+      "fn": 17,
+      "expected_cost_inr": 201400.0,
+      "detector": "behavioural LR \u2014 SIMULATED SESSIONS, not real traffic"
+    },
+    "document_forensics": {
+      "fp": 7,
+      "fn": 3,
+      "expected_cost_inr": 40300.0,
+      "detector": "ELA LR \u2014 SYNTHETIC SPECIMENS, not real documents"
     }
   }
 }

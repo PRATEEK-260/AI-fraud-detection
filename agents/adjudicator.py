@@ -75,6 +75,15 @@ INTERPRETABLE_SIGNALS = {
         "shared_device_ring", "shared_ip_ring", "signup_burst",
         "instant_purchase",
     },
+    "checkout_guard": {
+        "metronomic_cadence", "inhuman_response", "no_passive_events",
+        "thin_fingerprint", "mandate_breach:max_amount",
+        "mandate_breach:allowed_categories",
+        "mandate_breach:max_txns_per_hour",
+    },
+    "document_forensics": {
+        "ela_hotspot", "residual_outlier", "uneven_error_surface",
+    },
 }
 
 
@@ -145,7 +154,32 @@ def find_conflicts(cases: list[Case]) -> list[dict]:
                     ),
                 })
 
-        # 4. LLM veto on a rule-flagged ring.
+        # 4. Checkout Guard: the behavioural layer and the deterministic
+        #    mandate engine point opposite ways. This is the conflict that
+        #    matters most for agentic commerce — an authorised agent looks
+        #    exactly like a rogue one behaviourally, and only the mandate
+        #    separates them.
+        if c.source_agent == "checkout_guard":
+            breached = any(s.startswith("mandate_breach") for s in sigs)
+            looks_automated = bool(sigs & {"metronomic_cadence",
+                                           "inhuman_response",
+                                           "no_passive_events",
+                                           "thin_fingerprint"})
+            if looks_automated and not breached:
+                conflicts.append({
+                    "type": "agent_within_mandate",
+                    "entity_id": c.entity_id,
+                    "cases": [c],
+                    "question": (
+                        "Behavioural signals say this checkout was driven by "
+                        "an automated client, but it stayed inside the mandate "
+                        "its owner granted. Is being an agent, on its own, "
+                        "grounds for friction — or is the mandate the only "
+                        "thing that should matter?"
+                    ),
+                })
+
+        # 5. LLM veto on a rule-flagged ring.
         if c.source_agent == "ring_detector":
             # Match the verdict marker the Ring Detector writes, not the bare
             # word: the verifier's own prose says things like "unusual for
@@ -342,7 +376,7 @@ def main() -> None:
         by_type[c["type"]] += 1
     print(f"\nConflicts found: {len(conflicts):,}")
     for t in ("cross_agent", "model_without_evidence", "detector_split",
-              "llm_veto"):
+              "agent_within_mandate", "llm_veto"):
         n = by_type.get(t, 0)
         note = "  <- does not fire on this data, by construction" if (
             t == "cross_agent" and n == 0) else ""

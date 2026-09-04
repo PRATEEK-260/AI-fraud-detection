@@ -29,7 +29,7 @@ is the gap this project addresses.
 ## Architecture
 
 One shared spine — a `Case` schema, an append-only SQLite audit log, and an
-event bus — that four specialist agents write into, and one dashboard reads.
+event bus — that six specialist agents write into, and one dashboard reads.
 
 ```
                     ┌──────────────────────────────────────────┐
@@ -47,10 +47,24 @@ event bus — that four specialist agents write into, and one dashboard reads.
                      └─────────────┬────────────────────────────┘
                                    │
    Self-built ─────► ┌─────────────▼────────────────────────────┐
-   775 texts         │ Content Forensics   (docs / disputes)    │
+   753 texts         │ Content Forensics   (docs / disputes)    │
                      │   burstiness, MATTR, readability,        │
                      │   TF-IDF template reuse → evidence       │
                      │   logistic regression + LLM judgment     │
+                     └─────────────┬────────────────────────────┘
+                                   │
+   Simulated ──────► ┌─────────────▼────────────────────────────┐
+   3k sessions       │ Checkout Guard      (sessions)           │
+                     │   cadence / response floor → evidence    │
+                     │   MANDATE ENGINE (deterministic):        │
+                     │     spend cap · categories · velocity    │
+                     │   in-mandate agent  ->  ALLOWED          │
+                     └─────────────┬────────────────────────────┘
+                                   │
+   Specimens ──────► ┌─────────────▼────────────────────────────┐
+   240 images        │ Document Forensics  (KYC images)         │
+                     │   Error Level Analysis over field band   │
+                     │   edge-normalised residual → evidence    │
                      └─────────────┬────────────────────────────┘
                                    │
                      ┌─────────────▼────────────────────────────┐
@@ -136,6 +150,65 @@ So the LLM's job in this agent is the one the plan gave it (§6.3): explain
 statistical layer decides *what* gets flagged. Sending the LLM's verdicts to
 the decision layer instead would cost 106 of 114 detections.
 
+### Agentic Checkout Guard — 914 held-out sessions (SIMULATED)
+
+> **These sessions are simulated.** No public corpus of AI-shopping-agent
+> checkouts exists — the attack is new. The numbers below describe how
+> separable `scripts/simulate_sessions.py` is, **not** real-world detection.
+> 39% of sessions are generated as deliberate hard cases (rushed humans,
+> jittered agents carrying full browser fingerprints) so the classes overlap.
+
+| layer | precision | recall | F1 |
+|---|---|---|---|
+| behavioural rules | 0.898 | 0.687 | 0.778 |
+| behavioural LR — all cases | 0.973 | 0.949 | 0.961 |
+| behavioural LR — easy cases | 0.990 | 1.000 | 0.995 |
+| **behavioural LR — hard cases** | **0.946** | **0.878** | **0.910** |
+| mandate policy engine | 1.000 | 1.000 | 1.000 |
+
+The perfect policy-engine score is **tautological** and must be presented that
+way: the simulator defines a rogue agent as one that breaches a bound, and the
+engine checks bounds. It verifies the implementation, not the approach.
+
+The transferable claim is narrower and more useful: **where a machine-readable
+mandate exists, a breach is caught deterministically, with no model risk.**
+That is why the design puts the load-bearing decision on the mandate engine
+and treats the behavioural fingerprint as the speculative half — agent
+commerce needs a mandate standard before it needs a better bot detector.
+
+The decision logic matters as much as the detection. An agent operating
+*inside* its mandate is **allowed**, however obviously robotic it looks, and
+40 such deliberate allows are written to the audit log. Punishing a customer
+for delegating to an agent they authorised is the failure mode this agent
+exists to avoid.
+
+### Document Forensics — 74 held-out KYC images (SYNTHETIC SPECIMENS)
+
+> Rendered specimen cards, explicitly marked, invented issuing authority, no
+> real identity documents — there is no lawful public corpus of those, and
+> there should not be. The *tampering* is real image manipulation, so the JPEG
+> artifact is genuine even though the documents are not.
+
+| detector | precision | recall | F1 |
+|---|---|---|---|
+| ELA rules | 0.667 | 0.103 | 0.178 |
+| **ELA logistic regression** | **0.837** | **0.923** | **0.878** |
+| hotspot localisation | 33.3% | (chance: 34.0%) | — |
+
+**Read the third row before the second.** The detector separates tampered from
+genuine documents, but it identifies *which region was edited* at exactly
+chance. So whatever it keys on is not the localised compression discontinuity
+ELA is supposed to find — most likely a global effect, since a spliced field is
+pasted in clean and lacks the sensor noise of the photographed card around it.
+That is a real consequence of tampering, but it is a different claim, and the
+case files say so: they tell a reviewer the document warrants inspection, never
+which field to look at.
+
+ELA is also cheap to defeat — re-encoding the whole document once at uniform
+quality erases the signal entirely. It belongs in a stack as a free first
+filter against lazy tampering, never as a sole control, and this agent never
+auto-blocks.
+
 ### Latency
 
 | stage | measured |
@@ -156,7 +229,7 @@ project does not claim production streaming.
 
 ## What the measurements changed
 
-Five findings from this build changed the design rather than being papered
+Six findings from this build changed the design rather than being papered
 over. They are the honest core of the submission.
 
 **1. The ring signal lives in one cohort.** In the e-commerce dataset, 31% of
@@ -188,7 +261,18 @@ honest logistic-regression numbers fall from P 0.890 / R 0.809 to
 Forensics table). Three models, three families, all near-zero recall. The
 useful signal was corpus-level, not per-text.
 
-**5. The cost table decides the action.** Content Forensics has an FN:FP
+**5. An image detector scored 1.00 for entirely the wrong reason.** The first
+document corpus pre-compressed only the cards it went on to tamper, so every
+tampered file carried a second compression generation across the *whole*
+image. A classifier hit P 1.000 / R 1.000 by detecting global
+double-compression — while the ELA hotspot landed on the edited field in **0 of
+43** cases. Only the localisation check caught it. Both classes now share an
+identical capture-and-compression pipeline, and the honest score is F1 0.878
+with localisation still at chance (see above). Two leaks in this project were
+found by asking "is it right for the right reason?" rather than by looking at
+the score.
+
+**6. The cost table decides the action.** Content Forensics has an FN:FP
 ratio of 2.33 — wrongly denying a real customer's dispute costs nearly as much
 as paying out a fake one, and is far worse for the customer. So that agent
 **never auto-blocks**, at any confidence. Ring Detector (7.38) and Spike
@@ -198,6 +282,8 @@ Sentinel (10.82) may, but only with evidence behind them.
 |---|---|---|---|---|
 | spike_sentinel | ₹850 | ₹9,200 | 10.82 | auto-block permitted at high confidence |
 | ring_detector | ₹4,200 | ₹31,000 | 7.38 | auto-block permitted at high confidence |
+| checkout_guard | ₹1,600 | ₹11,000 | 6.88 | auto-block permitted at high confidence |
+| document_forensics | ₹3,100 | ₹6,200 | 2.00 | **escalate only — never auto-block** |
 | content_forensics | ₹2,400 | ₹5,600 | 2.33 | **escalate only — never auto-block** |
 
 Applied to the held-out confusion matrices, that policy costs
@@ -231,8 +317,16 @@ downloads and no API key:
 ```bash
 streamlit run dashboard/app.py            # opens with real cases
 python -m agents.content_forensics --no-llm
+python -m agents.checkout_guard           # simulated sessions ship with the repo
 python -m eval.cost_table
 python -m pytest tests/ -q
+```
+
+The 240 specimen KYC images are not committed (12 MB, and deterministic from a
+seed). Regenerate them in a few seconds, no downloads, no key:
+
+```bash
+python scripts/make_documents.py && python -m agents.document_forensics
 ```
 
 The two Kaggle datasets (645 MB) are not committed. Spike Sentinel and Ring
@@ -309,10 +403,16 @@ Stated plainly, because the evaluation is the point of this submission.
   disputes are the two domains with real human corpora, so they are the two
   that get measured. Image forensics on ID documents (ELA) was scoped out for
   the same reason.
-- **The Agentic Checkout Guard is not built.** It was the first cut in the
-  plan's priority order. Building it would have required fabricating the
-  session-timing data it detects, and finding 1 is the reason that was
-  avoided.
+- **The Checkout Guard runs on simulated sessions and the Document Forensics
+  agent on synthetic specimens.** Both are labelled as such everywhere they
+  are reported, because neither attack has a public corpus. A simulation
+  cannot validate a detector against an adversary that does not exist yet;
+  what it can do is prove the pipeline, the policy logic, and the evidence
+  format are real and testable. The mandate engine is the part that would
+  ship unchanged.
+- **KYC self-description TEXT remains out of scope.** There is no public
+  corpus of genuine human KYC narratives to pair against, so it is not
+  evaluated. Document *images* are covered by the ELA agent above.
 - **Cross-agent adjudication does not fire on this data.** The three agents run
   on three different datasets, so no `entity_id` is observable by two agents.
   The code path is implemented and unit-tested against a synthetic pair rather
@@ -345,9 +445,11 @@ Stated plainly, because the evaluation is the point of this submission.
 
 ```
 spine/       Case schema, append-only SQLite log, event bus, LLM client
-agents/      spike_sentinel, ring_detector, content_forensics, adjudicator
+agents/      spike_sentinel, ring_detector, content_forensics,
+             checkout_guard, document_forensics, adjudicator
 eval/        metrics, cost table + the decision policy, results/*.json
-scripts/     prepare_data (split freeze), build_content_dataset
+scripts/     prepare_data (split freeze), build_content_dataset,
+             simulate_sessions, make_documents
 dashboard/   Streamlit risk desk
-tests/       21 regression tests, one per bug that shipped
+tests/       27 regression tests, one per bug that shipped
 ```

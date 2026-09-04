@@ -1,0 +1,46 @@
+{
+  "agent": "document_forensics",
+  "generated_at": "2026-09-04T08:00:03.876716+00:00",
+  "DATA_WARNING": "Documents are SYNTHETIC specimens rendered by scripts/make_documents.py; no real identity documents were used. The tampering is genuine image manipulation, so the ELA artifact is a real JPEG codec effect \u2014 but these scores demonstrate a correct ELA implementation against splice-and-resave tampering, NOT robustness against a forger who re-encodes the whole document uniformly, which erases the signal. ELA is a cheap first filter, never a sole control.",
+  "method": {
+    "technique": "Error Level Analysis",
+    "resave_quality": 90,
+    "block_size": 16,
+    "key_statistic": "block_ratio \u2014 worst tile residual over the document median, because tampering is local"
+  },
+  "dataset": {
+    "n_documents": 240,
+    "n_heldout": 74,
+    "tampered_rate": 0.558
+  },
+  "rule_thresholds_from_untouched_train": {
+    "block_ratio": 4.6616,
+    "block_max": 0.5721,
+    "block_std": 0.075
+  },
+  "results": {
+    "ela_rules": {
+      "precision": 0.6667,
+      "recall": 0.1026,
+      "f1": 0.1778,
+      "tp": 4,
+      "fp": 2,
+      "fn": 35,
+      "tn": 33
+    },
+    "ela_logistic_regression": {
+      "precision": 0.8372,
+      "recall": 0.9231,
+      "f1": 0.878,
+      "tp": 36,
+      "fp": 7,
+      "fn": 3,
+      "tn": 28,
+      "pr_auc": 0.9088
+    }
+  },
+  "hotspot_localisation_rate": 0.3333,
+  "hotspot_localisation_note": "Share of tampered held-out documents where the highest-residual tile lands on the edited field. Guards against scoring well for the wrong reason.",
+  "ela_ms_per_document": 13.0,
+  "cases_written": 43
+}

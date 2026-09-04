@@ -9,6 +9,7 @@ and make no API calls.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 import sys
 from pathlib import Path
@@ -158,6 +159,74 @@ def test_every_agent_has_a_cost_entry():
         assert spec["false_positive"]["cost"] > 0
         assert spec["false_negative"]["cost"] > 0
         assert spec["false_positive"]["assumption"]
+
+
+# ---------------------------------------------------------------------------
+# Checkout Guard — the mandate engine is deterministic, so it is fully testable
+# ---------------------------------------------------------------------------
+
+def _session(**kw) -> pd.Series:
+    base = dict(amount=1000.0, merchant_category="grocery", txns_last_hour=1,
+                mandate_json=json.dumps({"max_amount": 5000.0,
+                                         "allowed_categories": ["grocery", "home"],
+                                         "max_txns_per_hour": 3}))
+    base.update(kw)
+    return pd.Series(base)
+
+
+def test_mandate_within_bounds_is_clean():
+    from agents.checkout_guard import evaluate_mandate
+    out = evaluate_mandate(_session())
+    assert out["has_mandate"] and out["within_bounds"] and not out["breaches"]
+
+
+def test_mandate_catches_each_bound_independently():
+    from agents.checkout_guard import evaluate_mandate
+    for kw, bound in (
+        (dict(amount=9000.0), "max_amount"),
+        (dict(merchant_category="crypto"), "allowed_categories"),
+        (dict(txns_last_hour=9), "max_txns_per_hour"),
+    ):
+        out = evaluate_mandate(_session(**kw))
+        assert [b["bound"] for b in out["breaches"]] == [bound], kw
+
+
+def test_session_without_mandate_is_not_a_breach():
+    """A human checkout has no mandate; absence of one is not a violation."""
+    from agents.checkout_guard import evaluate_mandate
+    out = evaluate_mandate(_session(mandate_json=""))
+    assert out["has_mandate"] is False and out["breaches"] == []
+
+
+def test_authorised_agent_inside_mandate_is_not_punished():
+    """The whole point: being an agent is not itself an offence."""
+    from agents.checkout_guard import make_case
+    sig = {f"rule_{r}": True for r in
+           ("metronomic_cadence", "inhuman_response", "no_passive_events",
+            "thin_fingerprint")}
+    sig.update(gap_cv=0.05, min_response_ms=30.0, passive_per_action=0.1,
+               fingerprint_score=0.25)
+    row = _session()
+    row["session_id"] = "S1"; row["user_agent"] = "python-requests/2.34.2"
+    row["declared_agent"] = True
+    from agents.checkout_guard import evaluate_mandate
+    case = make_case(row, sig, 0.99, evaluate_mandate(row))
+    assert case.decision == "allow"
+
+
+def test_agent_breaching_mandate_is_actioned():
+    from agents.checkout_guard import make_case, evaluate_mandate
+    sig = {f"rule_{r}": False for r in
+           ("metronomic_cadence", "inhuman_response", "no_passive_events",
+            "thin_fingerprint")}
+    sig.update(gap_cv=0.9, min_response_ms=700.0, passive_per_action=5.0,
+               fingerprint_score=1.0)
+    row = _session(amount=90000.0, merchant_category="crypto")
+    row["session_id"] = "S2"; row["user_agent"] = "Mozilla/5.0 x"
+    row["declared_agent"] = True
+    case = make_case(row, sig, 0.2, evaluate_mandate(row))
+    assert case.decision in ("block", "escalate")
+    assert any(e.signal.startswith("mandate_breach") for e in case.evidence)
 
 
 # ---------------------------------------------------------------------------

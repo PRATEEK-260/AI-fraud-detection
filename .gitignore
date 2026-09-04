@@ -10,6 +10,12 @@ data/llm_cache/
 !data/cases.db
 !data/processed/content_forensics_labeled.csv
 !data/processed/split_summary.json
+!data/processed/checkout_sessions.parquet
+
+# The 240 specimen document images (12MB) are NOT committed: they regenerate
+# deterministically from a seed in seconds with no downloads and no API key
+# (scripts/make_documents.py). Shipping them would triple the repo for no
+# reproducibility gain.
 __pycache__/
 .env
 .venv/

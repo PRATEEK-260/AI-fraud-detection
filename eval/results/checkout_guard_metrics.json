@@ -1,0 +1,88 @@
+{
+  "agent": "checkout_guard",
+  "generated_at": "2026-09-04T07:59:59.865768+00:00",
+  "DATA_WARNING": "Sessions are SIMULATED by scripts/simulate_sessions.py. No public corpus of AI shopping-agent checkouts exists. The agent-detection metrics below measure the separability of that simulation and must NOT be read as real-world detection performance. The mandate policy engine is deterministic and carries no such caveat.",
+  "dataset": {
+    "n_sessions": 3000,
+    "n_heldout": 914,
+    "agent_rate": 0.378,
+    "rogue_rate": 0.137,
+    "hard_case_fraction": 0.391,
+    "simulator_seed": 1337
+  },
+  "agent_detection_SIMULATED": {
+    "rules_only": {
+      "precision": 0.8984,
+      "recall": 0.6866,
+      "f1": 0.7783,
+      "tp": 230,
+      "fp": 26,
+      "fn": 105,
+      "tn": 553
+    },
+    "logistic_regression": {
+      "precision": 0.9725,
+      "recall": 0.9493,
+      "f1": 0.9607,
+      "tp": 318,
+      "fp": 9,
+      "fn": 17,
+      "tn": 570,
+      "pr_auc": 0.9939
+    },
+    "by_difficulty": {
+      "easy_cases": {
+        "precision": 0.9899,
+        "recall": 1.0,
+        "f1": 0.9949,
+        "tp": 196,
+        "fp": 2,
+        "fn": 0,
+        "tn": 351
+      },
+      "hard_cases": {
+        "precision": 0.9457,
+        "recall": 0.8777,
+        "f1": 0.9104,
+        "tp": 122,
+        "fp": 7,
+        "fn": 17,
+        "tn": 219
+      }
+    }
+  },
+  "mandate_policy_engine": {
+    "nature": "deterministic bounds check, not a learned model",
+    "why_the_perfect_score_is_not_a_result": "The simulator defines a rogue agent as one breaching at least one mandate bound, and this engine checks those bounds, so 1.00/1.00 is tautological. It verifies the implementation, not the approach. The transferable claim is narrower and still useful: where a machine-readable mandate exists, a breach is detectable deterministically, with no model risk.",
+    "metrics_vs_rogue_label": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 108,
+      "fp": 0,
+      "fn": 0,
+      "tn": 806
+    },
+    "mandates_evaluated": 335,
+    "breaching": 108,
+    "breach_kinds": {
+      "allowed_categories": 94,
+      "max_amount": 69,
+      "max_txns_per_hour": 54
+    }
+  },
+  "rules": {
+    "metronomic_cadence": "inter-action intervals too regular for human hesitation",
+    "inhuman_response": "acted faster than human perception-plus-motor response",
+    "no_passive_events": "almost no scrolling or pointer movement \u2014 nothing was read",
+    "thin_fingerprint": "browser fingerprint surface missing or automation user-agent"
+  },
+  "human_response_floor_ms": 250.0,
+  "signal_ms_per_session": 0.053,
+  "cases_written": 152,
+  "decisions": {
+    "block": 108,
+    "escalate": 4,
+    "allow": 40
+  }
+}

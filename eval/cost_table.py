@@ -68,6 +68,52 @@ COSTS: dict[str, dict] = {
                           "transactions before independent detection.",
         },
     },
+    "checkout_guard": {
+        "entity": "checkout session",
+        "false_positive": {
+            "cost": 1600.0,
+            "what_breaks": "a legitimate agent-assisted or hurried human "
+                           "checkout is interrupted",
+            "assumption": "a step-up challenge on a good session costs "
+                          "conversion plus support contact. Deliberately "
+                          "priced ABOVE a Spike Sentinel false positive: "
+                          "wrongly blocking an agent a customer authorised "
+                          "breaks a delegated workflow they set up on "
+                          "purpose, and agent commerce is exactly the "
+                          "behaviour a payments company wants to encourage.",
+        },
+        "false_negative": {
+            "cost": 11000.0,
+            "what_breaks": "an agent transacts outside the authority its "
+                           "owner granted",
+            "assumption": "the owner disputes a charge they never authorised, "
+                          "so the loss is the transaction plus a chargeback "
+                          "plus the trust cost of a mandate that did not hold. "
+                          "A breached mandate also tends to repeat until "
+                          "revoked.",
+        },
+    },
+    "document_forensics": {
+        "entity": "KYC document image",
+        "false_positive": {
+            "cost": 3100.0,
+            "what_breaks": "a genuine customer's identity document is "
+                           "rejected as forged",
+            "assumption": "onboarding abandonment plus manual re-review, and "
+                          "the customer is accused of forgery on the evidence "
+                          "of a compression artifact. Priced high on purpose: "
+                          "ELA false-positives on legitimately re-saved or "
+                          "phone-compressed documents are common, so this "
+                          "agent must never auto-reject.",
+        },
+        "false_negative": {
+            "cost": 6200.0,
+            "what_breaks": "a tampered identity document passes KYC",
+            "assumption": "downstream account-takeover and mule-account risk "
+                          "rather than a direct loss at onboarding; a single "
+                          "forged KYC can open a channel used repeatedly.",
+        },
+    },
     "content_forensics": {
         "entity": "document / dispute narrative",
         "false_positive": {
@@ -227,6 +273,26 @@ def score_against_results() -> dict:
             "expected_cost_inr": expected_cost("content_forensics", r["fp"], r["fn"]),
             "detector": label,
         }
+    guard = RESULTS_DIR / "checkout_guard_metrics.json"
+    if guard.exists():
+        report = json.loads(guard.read_text())
+        r = report["agent_detection_SIMULATED"]["logistic_regression"]
+        scored["checkout_guard"] = {
+            "fp": r["fp"], "fn": r["fn"],
+            "expected_cost_inr": expected_cost("checkout_guard", r["fp"], r["fn"]),
+            "detector": "behavioural LR — SIMULATED SESSIONS, not real traffic",
+        }
+
+    docs = RESULTS_DIR / "document_forensics_metrics.json"
+    if docs.exists():
+        report = json.loads(docs.read_text())
+        r = report["results"]["ela_logistic_regression"]
+        scored["document_forensics"] = {
+            "fp": r["fp"], "fn": r["fn"],
+            "expected_cost_inr": expected_cost("document_forensics", r["fp"], r["fn"]),
+            "detector": "ELA LR — SYNTHETIC SPECIMENS, not real documents",
+        }
+
     return scored
 
 
