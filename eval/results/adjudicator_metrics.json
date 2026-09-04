@@ -1,27 +1,27 @@
 {
   "agent": "adjudicator",
-  "generated_at": "2026-09-04T06:12:59.460331+00:00",
+  "generated_at": "2026-09-04T07:16:11.699440+00:00",
   "design": "rule-triggered LLM arbitration over the audit log; never mutates source cases, appends a ruling case instead",
-  "arbiter_model": "anthropic/claude-haiku-4.5",
+  "arbiter_model": "openai/gpt-5-nano",
   "cross_agent_selfcheck_passed": true,
-  "cases_read": 2983,
+  "cases_read": 2977,
   "conflicts_found": {
-    "detector_split": 37,
+    "detector_split": 48,
     "model_without_evidence": 461
   },
   "cross_agent_zero_reason": "the three agents run on three different datasets, so no entity_id is observable by more than one agent; the path is implemented and self-checked rather than manufactured by joining unrelated data",
-  "conflicts_arbitrated": 15,
+  "conflicts_arbitrated": 20,
   "decisions_overturned": 0,
   "ruling_distribution": {
-    "escalate": 15
+    "escalate": 20
   },
-  "seconds_per_arbitration": 0.0,
+  "seconds_per_arbitration": 2.09,
   "escalate_when_ratio_below": 2.5,
   "hero_case": {
     "conflict_type": "detector_split",
-    "entity_id": "review_topic07",
-    "arguments": "CONFLICT TYPE: detector_split\nQUESTION: The interpretable linguistic signals and the LLM forensic judgment do not agree on this text. Which argument is stronger, and does the disagreement warrant denying a customer's dispute?\n\n--- ARGUMENT 1: agent `content_forensics` ---\nentity: review_topic07 (document)\nits decision: escalate  confidence: 1.000\ncost asymmetry for this agent: a false positive costs Rs 2,400 (a genuine customer's dispute is wrongly denied); a false negative costs Rs 5,600 (a fabricated dispute is paid out). FN:FP ratio 2.33.\nevidence presented:\n  - [template_reuse] TF-IDF similarity 0.45 to known AI-generated texts  (weight 0.3)\nstated reasoning: Flagged product review as likely AI-generated (confidence 1.00). Forensic reasoning: signal-based flag. Signals: burstiness=0.68, readability grade=5.5, lexical diversity=0.95. Action `escalate`: FN:FP ratio 2.33 is below 2.5: a wrong block costs too much relative to a miss for this agent.\n",
+    "entity_id": "review_topic32",
+    "arguments": "CONFLICT TYPE: detector_split\nQUESTION: The interpretable linguistic signals and the LLM forensic judgment do not agree on this text. Which argument is stronger, and does the disagreement warrant denying a customer's dispute?\n\n--- ARGUMENT 1: agent `content_forensics` ---\nentity: review_topic32 (document)\nits decision: escalate  confidence: 0.730\ncost asymmetry for this agent: a false positive costs Rs 2,400 (a genuine customer's dispute is wrongly denied); a false negative costs Rs 5,600 (a fabricated dispute is paid out). FN:FP ratio 2.33.\nevidence presented:\n  - [llm_reason_1] Natural-sounding complaint with specific issues (multiple failures, app glitches, poor customer service) and a personal stance (do not recommend).  (weight 0.073)\n  - [llm_reason_2] Slightly varied sentence lengths and informal phrasing (e.g., 'Very disappointed,' 'Wish I had gone with a different brand') typical of human review, not overly polished or template-like.  (weight 0.073)\nstated reasoning: Flagged product review as likely AI-generated (confidence 0.73). Forensic reasoning: Natural-sounding complaint with specific issues (multiple failures, app glitches, poor customer service) and a personal stance (do not recommend).; Slightly varied sentence lengths and informal phrasing (e.g., 'Very disappointed,' 'Wish I had gone with a different brand') typical of human review, not overly polished or template-like.. Signals: burstiness=0.48, readability grade=5.1, lexical diversity=0.87. Action `escalate`: no human-readable evidence behind the flag \u2014 a model score alone never blocks.\n",
     "ruling": "escalate",
-    "rationale": "LLM arbitration disabled; conservative default is to escalate rather than auto-action a contested case."
+    "rationale": "The agent explicitly escalates with human-readable concerns: natural-sounding, specific issues, and personal stance, plus forensic notes about not being overly polished. However, the stated reasoning notes a lack of human-readable evidence behind the AI flag, which is exactly the ambiguity described. Escalation appropriately preserves review while these signals are reconciled by a human reviewer."
   }
 }

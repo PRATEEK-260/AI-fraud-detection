@@ -60,7 +60,7 @@ import pandas as pd
 from eval.cost_table import decide
 from eval.metrics import binary_metrics, format_report
 from spine.db import DEFAULT_DB_PATH, connect, count_cases, insert_cases
-from spine.llm import chat_json
+from spine.llm import REASONING_MODEL, chat_json
 from spine.schema import Case, Evidence
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -321,7 +321,7 @@ LLM_SYSTEM_PROMPT = (
     '"reasons": ["...", "..."]}'
 )
 
-VERIFIER_MODEL = "anthropic/claude-haiku-4.5"
+VERIFIER_MODEL = REASONING_MODEL
 
 
 def llm_verify(summary: dict) -> dict:

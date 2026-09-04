@@ -53,13 +53,13 @@ from pathlib import Path
 
 from eval.cost_table import COSTS, ESCALATE_WHEN_RATIO_BELOW
 from spine.db import DEFAULT_DB_PATH, connect, count_cases, fetch_cases, insert_cases
-from spine.llm import chat_json
+from spine.llm import REASONING_MODEL, chat_json
 from spine.schema import Case, Evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS_DIR = ROOT / "eval" / "results"
 
-ARBITER_MODEL = "anthropic/claude-haiku-4.5"
+ARBITER_MODEL = REASONING_MODEL
 
 # Signals that constitute human-readable evidence, per agent. A case built
 # only from signals OUTSIDE these sets is a bare score wearing a case file.
@@ -147,8 +147,12 @@ def find_conflicts(cases: list[Case]) -> list[dict]:
 
         # 4. LLM veto on a rule-flagged ring.
         if c.source_agent == "ring_detector":
+            # Match the verdict marker the Ring Detector writes, not the bare
+            # word: the verifier's own prose says things like "unusual for
+            # legitimate shared family use" while ruling the cluster a RING,
+            # and a substring test turned those into phantom vetoes.
             if any(s.startswith("llm_verification") for s in sigs) and \
-                    "legitimate" in c.reasoning_text:
+                    "LLM verification: legitimate" in c.reasoning_text:
                 conflicts.append({
                     "type": "llm_veto",
                     "entity_id": c.entity_id,

@@ -54,13 +54,13 @@
       "fp": 244,
       "fn": 1972,
       "expected_cost_inr": 62156800.0,
-      "detector": "graph rules only (no LLM verification in this run) (component split)"
+      "detector": "graph rules + LLM verification (component split)"
     },
     "content_forensics": {
-      "fp": 11,
-      "fn": 21,
-      "expected_cost_inr": 144000.0,
-      "detector": "logistic regression"
+      "fp": 13,
+      "fn": 33,
+      "expected_cost_inr": 216000.0,
+      "detector": "logistic regression (operating detector)"
     }
   }
 }

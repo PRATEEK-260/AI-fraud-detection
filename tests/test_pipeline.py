@@ -247,6 +247,26 @@ def test_model_only_flag_is_detected_as_a_conflict():
     assert "model_without_evidence" in types
 
 
+def test_llm_veto_needs_the_verdict_not_the_word_legitimate():
+    """The verifier's prose mentions "legitimate" while ruling a cluster a
+    RING; a substring test tagged those as vetoes that never happened."""
+    from agents.adjudicator import find_conflicts
+    ruled_ring = _case(
+        source_agent="ring_detector",
+        evidence=[Evidence("llm_verification_1",
+                           "unusual for legitimate family use", 0.05)],
+        reasoning_text="LLM verification: ring (confidence 0.78) — unusual "
+                       "for legitimate shared family use.")
+    assert "llm_veto" not in [c["type"] for c in find_conflicts([ruled_ring])]
+
+    actually_vetoed = _case(
+        source_agent="ring_detector",
+        evidence=[Evidence("llm_verification_1", "a family sharing a tablet", 0.05)],
+        reasoning_text="LLM verification: legitimate (confidence 0.7) — a "
+                       "family sharing a tablet.")
+    assert "llm_veto" in [c["type"] for c in find_conflicts([actually_vetoed])]
+
+
 def test_rule_backed_flag_is_not_a_conflict():
     from agents.adjudicator import find_conflicts
     backed = _case(source_agent="spike_sentinel",

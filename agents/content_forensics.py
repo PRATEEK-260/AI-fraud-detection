@@ -48,7 +48,7 @@ import textstat
 from eval.cost_table import decide
 from eval.metrics import binary_metrics, format_report, pr_auc
 from spine.db import DEFAULT_DB_PATH, connect, count_cases, insert_cases
-from spine.llm import chat_json
+from spine.llm import REASONING_MODEL, chat_json
 from spine.schema import Case, Evidence
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -187,7 +187,7 @@ LLM_SYSTEM_PROMPT = (
     'only: {"verdict": "ai" | "human", "confidence": 0-1, "reasons": ["...", "..."]}'
 )
 
-DETECTOR_MODEL = "anthropic/claude-haiku-4.5"
+DETECTOR_MODEL = REASONING_MODEL
 
 
 def llm_classify(text: str, domain: str) -> dict:
@@ -439,15 +439,14 @@ def main() -> None:
     print(f"\nSignal separation (|effect| > 0.5 meaningful): {sep}")
 
     # --- cases for flagged held-out texts --------------------------------------
-    # Which detector supplies the flags depends on what ran: the LLM when it
-    # was called, otherwise the logistic-regression detector. Either way the
-    # audit log gets populated — case files are not an LLM-only feature.
-    if llm_start:
-        flagged_idx = [i for i in llm_eval.index if llm_out[i]["pred_ai"] == 1]
-        flag_source = "llm_zeroshot"
-    else:
-        flagged_idx = [i for i, pred in zip(held.index, lr_pred) if pred == 1]
-        flag_source = "logistic_regression"
+    # The logistic-regression detector decides WHAT is flagged; the LLM
+    # explains WHY (IMPLEMENTATION_PLAN.md §6.3 — the LLM is the reasoning
+    # layer). That division matters here because the LLM is measurably the
+    # weaker detector on this corpus: its verdicts are still reported in
+    # `results.llm_zeroshot`, but flagging on them would discard most of the
+    # recall the statistical layer earns.
+    flagged_idx = [i for i, pred in zip(held.index, lr_pred) if pred == 1]
+    flag_source = "logistic_regression"
     cases = []
     for idx in flagged_idx[: args.max_cases]:
         row = held.loc[idx]

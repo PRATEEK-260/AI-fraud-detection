@@ -215,12 +215,13 @@ def score_against_results() -> dict:
     content = RESULTS_DIR / "content_forensics_metrics.json"
     if content.exists():
         report = json.loads(content.read_text())
-        # Label whichever detector actually produced these numbers — the LLM
-        # detector is absent from the report when the run used --no-llm.
-        if "llm_zeroshot" in report["results"]:
-            r, label = report["results"]["llm_zeroshot"], "LLM zero-shot"
-        else:
-            r, label = report["results"]["logistic_regression"], "logistic regression"
+        # Price the detector that actually decides what gets flagged. That is
+        # the logistic-regression layer: the LLM is the reasoning layer here
+        # (it explains a flag) and is measurably the weaker detector, so
+        # costing the system on its confusion matrix would misstate the
+        # operating point.
+        r, label = (report["results"]["logistic_regression"],
+                    "logistic regression (operating detector)")
         scored["content_forensics"] = {
             "fp": r["fp"], "fn": r["fn"],
             "expected_cost_inr": expected_cost("content_forensics", r["fp"], r["fn"]),

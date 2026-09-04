@@ -21,6 +21,7 @@ plan — reasoning calls during a replayed demo are pre-warmed cache hits.
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -30,7 +31,22 @@ ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 
 CACHE_DIR = ROOT / "data" / "llm_cache"
-MODEL = os.environ.get("OPENROUTER_MODEL", "anthropic/claude-haiku-4.5")
+MODEL = os.environ.get("OPENROUTER_MODEL", "openai/gpt-5-nano")
+
+# Reasoning models (the gpt-5 family included) spend their token budget on
+# hidden reasoning first. Asked for a short JSON verdict with a 300-token cap,
+# gpt-5-nano returned an EMPTY completion after burning 1,152 reasoning tokens
+# — billed, and useless. "minimal" effort turns that off and the same call
+# returns valid JSON in ~125 tokens. Models without a reasoning mode ignore
+# the field, so it is safe to send by default; set REASONING_EFFORT="" to
+# disable.
+REASONING_EFFORT = os.environ.get("REASONING_EFFORT", "minimal")
+
+# The model used by the reasoning agents (Content Forensics' detector, Ring
+# Detector's verifier, the Adjudicator's arbiter). Kept in one place so a
+# single env var re-points all three, and so the README can state plainly
+# which model produced the reported numbers.
+REASONING_MODEL = os.environ.get("REASONING_MODEL", "openai/gpt-5-nano")
 
 _client: OpenAI | None = None
 
@@ -63,21 +79,75 @@ def chat(
     temperature: float = 0.2,
     max_tokens: int = 1024,
     use_cache: bool = True,
+    reasoning_effort: str | None = None,
 ) -> str:
     """One LLM call, cached on disk for identical requests."""
+    effort = REASONING_EFFORT if reasoning_effort is None else reasoning_effort
     payload = {"model": model, "messages": messages,
                "temperature": temperature, "max_tokens": max_tokens}
-    path = _cache_path(payload)
+    # Part of the cache key: the same prompt at a different reasoning effort
+    # is a different request and must not collide with a cached answer.
+    extra = {"reasoning": {"effort": effort}} if effort else {}
+    path = _cache_path({**payload, "_extra": extra})
     if use_cache and path.exists():
         return json.loads(path.read_text())["text"]
 
-    response = _get_client().chat.completions.create(**payload)
+    response = _get_client().chat.completions.create(
+        **payload, **({"extra_body": extra} if extra else {}))
     text = response.choices[0].message.content or ""
 
     if use_cache:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps({"text": text, "model": model}))
+        path.write_text(json.dumps(
+            {"text": text, "model": model, "reasoning_effort": effort}))
     return text
+
+
+class JSONReplyError(ValueError):
+    """The model did not return usable JSON. Callers should count these rather
+    than let one malformed reply abort a whole evaluation run."""
+
+    def __init__(self, text: str) -> None:
+        super().__init__(f"unparseable JSON reply: {text[:200]!r}")
+        self.text = text
+
+
+def _repair_json(text: str) -> dict:
+    """Best-effort recovery from the ways small models mangle JSON.
+
+    Seen in practice: prose or a code fence around the object, and — the one
+    that actually broke a run — an unescaped double quote inside a reason
+    string, which no amount of slicing fixes. For that case the scalar fields
+    are pulled out by pattern, since verdict and confidence are all the
+    callers strictly need.
+    """
+    fenced = re.sub(r"^\s*```(?:json)?|```\s*$", "", text.strip(),
+                    flags=re.MULTILINE)
+    start, end = fenced.find("{"), fenced.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(fenced[start : end + 1])
+        except json.JSONDecodeError:
+            pass
+
+    out: dict = {}
+    for field in ("verdict", "decision", "winning_argument"):
+        m = re.search(rf'"{field}"\s*:\s*"([^"]+)"', fenced)
+        if m:
+            out[field] = m.group(1)
+    m = re.search(r'"confidence"\s*:\s*([0-9.]+)', fenced)
+    if m:
+        try:
+            out["confidence"] = float(m.group(1))
+        except ValueError:
+            pass
+    m = re.search(r'"(?:reasons|rationale)"\s*:\s*(.+)', fenced, re.S)
+    if m:
+        out["reasons"] = [r.strip(' "\n') for r in
+                          re.findall(r'"([^"]{8,})"', m.group(1))][:4]
+    if not out:
+        raise JSONReplyError(text)
+    return out
 
 
 def chat_json(messages: list[dict[str, str]], **kwargs) -> dict:
@@ -86,7 +156,4 @@ def chat_json(messages: list[dict[str, str]], **kwargs) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        start, end = text.find("{"), text.rfind("}")
-        if start != -1 and end > start:
-            return json.loads(text[start : end + 1])
-        raise
+        return _repair_json(text)
