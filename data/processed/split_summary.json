@@ -1,0 +1,25 @@
+{
+  "dataset": "kartik2112/fraud-detection (Sparkov)",
+  "split_strategy": "Kaggle-provided split adopted as time-based split (verified chronological, disjoint ranges)",
+  "train": {
+    "rows": 1296675,
+    "fraud_count": 7506,
+    "fraud_rate": 0.00579,
+    "start": "2019-01-01 00:00:18",
+    "end": "2020-06-21 12:13:37",
+    "n_cards": 983,
+    "n_merchants": 693,
+    "mean_amount": 70.35
+  },
+  "heldout": {
+    "rows": 555719,
+    "fraud_count": 2145,
+    "fraud_rate": 0.00386,
+    "start": "2020-06-21 12:14:25",
+    "end": "2020-12-31 23:59:34",
+    "n_cards": 924,
+    "n_merchants": 693,
+    "mean_amount": 69.39
+  },
+  "frozen_at": "2026-09-02 17:37:13.637861"
+}

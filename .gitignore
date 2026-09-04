@@ -2,6 +2,14 @@ data/raw/*
 data/processed/*
 data/llm_cache/
 *.db
+
+# ...but ship the small artifacts a judge needs to run this without first
+# downloading 645MB from Kaggle: the audit log (so the dashboard opens with
+# real cases), the self-built Content Forensics corpus, and the frozen-split
+# provenance. The large raw datasets stay out; README has the download step.
+!data/cases.db
+!data/processed/content_forensics_labeled.csv
+!data/processed/split_summary.json
 __pycache__/
 .env
 .venv/
