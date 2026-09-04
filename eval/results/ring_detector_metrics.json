@@ -1,0 +1,136 @@
+{
+  "agent": "ring_detector",
+  "generated_at": "2026-09-04T06:12:50.925509+00:00",
+  "dataset": {
+    "source": "vbinh002/fraud-ecommerce (Fraud_Data.csv)",
+    "n_accounts": 151112,
+    "fraud_rate": 0.09365,
+    "note": "device_id and ip_address are real dataset columns, not synthesised \u2014 this is why a second dataset was used for this agent (IMPLEMENTATION_PLAN.md \u00a74)"
+  },
+  "split": {
+    "headline": "component",
+    "component": "whole connected components (whole rings) assigned by stable hash, 30% held out; no ring straddles the boundary",
+    "time": "last 20% by signup_time",
+    "why_not_time": "MEASURED: the ring signal is confined to the 2015-01 cohort (31% of January accounts sit on a device shared by 3+ users vs ~0.2% every later month), so a time split leaves held-out with almost no ring positives and scores the dataset's construction rather than the detector. See cohort_diagnostic below."
+  },
+  "cohort_diagnostic_by_signup_month": {
+    "2015-01": {
+      "accounts": 26978,
+      "share_on_device_with_3plus_users": 0.3116,
+      "fraud_rate": 0.3148
+    },
+    "2015-02": {
+      "accounts": 17535,
+      "share_on_device_with_3plus_users": 0.0026,
+      "fraud_rate": 0.0466
+    },
+    "2015-03": {
+      "accounts": 19555,
+      "share_on_device_with_3plus_users": 0.0019,
+      "fraud_rate": 0.045
+    },
+    "2015-04": {
+      "accounts": 18895,
+      "share_on_device_with_3plus_users": 0.0022,
+      "fraud_rate": 0.0461
+    },
+    "2015-05": {
+      "accounts": 19338,
+      "share_on_device_with_3plus_users": 0.0024,
+      "fraud_rate": 0.0436
+    },
+    "2015-06": {
+      "accounts": 18633,
+      "share_on_device_with_3plus_users": 0.0022,
+      "fraud_rate": 0.0461
+    },
+    "2015-07": {
+      "accounts": 19454,
+      "share_on_device_with_3plus_users": 0.0019,
+      "fraud_rate": 0.0461
+    },
+    "2015-08": {
+      "accounts": 10724,
+      "share_on_device_with_3plus_users": 0.0023,
+      "fraud_rate": 0.0455
+    }
+  },
+  "graph": {
+    "nodes": 151112,
+    "edges": 51708,
+    "linked_accounts": 19331,
+    "max_fanout_skipped": 50,
+    "clustering": "networkx louvain_communities (python-louvain is unmaintained; networkx ships the same algorithm)",
+    "n_clusters": 848,
+    "n_clusters_flagged": 759,
+    "accounts_flagged": 8409,
+    "cluster_size_median": 10,
+    "cluster_size_max": 20,
+    "build_seconds": 3.77,
+    "cluster_seconds": 0.65
+  },
+  "rule_thresholds_train": {
+    "device_reuse": 3.0,
+    "ip_reuse": 3.0,
+    "signup_span_hours": 24.0,
+    "signup_to_purchase_s": 107591.48
+  },
+  "results": {
+    "component": {
+      "n_heldout_accounts": 45507,
+      "heldout_fraud_rate": 0.09579,
+      "graph_rules_only": {
+        "precision": 0.9073,
+        "recall": 0.5476,
+        "f1": 0.683,
+        "tp": 2387,
+        "fp": 244,
+        "fn": 1972,
+        "tn": 40904
+      },
+      "graph_rules_llm_verified": {
+        "precision": 0.9073,
+        "recall": 0.5476,
+        "f1": 0.683,
+        "tp": 2387,
+        "fp": 244,
+        "fn": 1972,
+        "tn": 40904
+      }
+    },
+    "time": {
+      "n_heldout_accounts": 30223,
+      "heldout_fraud_rate": 0.04599,
+      "graph_rules_only": {
+        "precision": 0.2,
+        "recall": 0.0014,
+        "f1": 0.0029,
+        "tp": 2,
+        "fp": 8,
+        "fn": 1388,
+        "tn": 28825
+      },
+      "graph_rules_llm_verified": {
+        "precision": 0.2,
+        "recall": 0.0014,
+        "f1": 0.0029,
+        "tp": 2,
+        "fp": 8,
+        "fn": 1388,
+        "tn": 28825
+      }
+    }
+  },
+  "llm_verification": {
+    "model": "anthropic/claude-haiku-4.5",
+    "clusters_reviewed": 0,
+    "clusters_vetoed_legitimate": 0,
+    "accounts_removed_by_veto": 0,
+    "seconds_per_cluster": 0.0
+  },
+  "cases_written": 759,
+  "decisions": {
+    "block": 759,
+    "escalate": 0
+  }
+}

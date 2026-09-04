@@ -1,6 +1,6 @@
 {
   "agent": "spike_sentinel",
-  "generated_at": "2026-09-02T12:13:48.483786+00:00",
+  "generated_at": "2026-09-04T06:12:16.028535+00:00",
   "data": {
     "n_fit": 1167007,
     "n_valid": 129668,
@@ -70,7 +70,7 @@
       "recall": 0.2272
     }
   },
-  "latency_ms_per_tx": 0.000785,
+  "latency_ms_per_tx": 0.00114,
   "top_features": [
     [
       "amt_log",
@@ -107,7 +107,7 @@
   ],
   "cases_written": 2124,
   "decisions": {
-    "block": 1983,
-    "escalate": 141
+    "block": 1522,
+    "escalate": 602
   }
 }

@@ -31,6 +31,7 @@ import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier
 
+from eval.cost_table import decide
 from eval.metrics import best_f1_threshold, binary_metrics, format_report, pr_auc
 from spine.db import connect, count_cases, insert_cases
 from spine.schema import Case, Evidence
@@ -212,7 +213,11 @@ def make_case(row: pd.Series, p: float, s: float, threshold: float) -> Case:
         "ensemble_score", f"weighted score {s:.3f} vs threshold {threshold:.3f}", 0.10))
 
     reasons = "; ".join(e.value for e in evidence if e.signal in RULES) or "model-only signal"
-    decision = "block" if p >= 0.95 else "escalate"
+    # The action comes from the shared cost policy, not from the score alone:
+    # a flag with no interpretable rule behind it is never auto-blocked.
+    has_evidence = any(e.signal in RULES for e in evidence)
+    decision, policy_why = decide("spike_sentinel", p, has_evidence)
+    evidence.append(Evidence("decision_policy", policy_why, 0.05))
     return Case(
         source_agent="spike_sentinel",
         entity_id=str(row["trans_num"]),
@@ -227,7 +232,8 @@ def make_case(row: pd.Series, p: float, s: float, threshold: float) -> Case:
             f"Flagged ${row['amt']:,.2f} at {row['merchant']} "
             f"(category: {row['category']}) at {int(row['hour']):02d}:00. "
             f"Signals: {reasons}. Model probability {p:.3f}, ensemble score "
-            f"{s:.3f} (threshold {threshold:.3f})."
+            f"{s:.3f} (threshold {threshold:.3f}). "
+            f"Action `{decision}`: {policy_why}."
         ),
     )
 

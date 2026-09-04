@@ -6,6 +6,7 @@ dashboard reads from and the adjudicator arbitrates over.
 
 import json
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 from spine.schema import Case, Evidence
@@ -88,7 +89,10 @@ def fetch_cases(
                 cost_estimate=r[6],
                 decision=r[7],
                 reasoning_text=r[8],
-                timestamp=r[9],
+                # Parse back to datetime: a fetched Case must be re-insertable
+                # (insert_cases calls .isoformat() on it), and the dashboard
+                # sorts and formats on it.
+                timestamp=datetime.fromisoformat(r[9]),
             )
         )
     return cases

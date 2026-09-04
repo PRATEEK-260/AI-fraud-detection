@@ -1,6 +1,10 @@
 data/raw/*
 data/processed/*
+data/llm_cache/
 *.db
 __pycache__/
 .env
 .venv/
+
+# tests
+.pytest_cache/

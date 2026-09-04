@@ -1,0 +1,66 @@
+{
+  "currency": "INR",
+  "disclaimer": "hand-reasoned order-of-magnitude estimates for a mid-size Indian merchant portfolio, not measured figures; the relative weighting is the claim, not the absolute values",
+  "escalate_when_ratio_below": 2.5,
+  "table": {
+    "spike_sentinel": {
+      "entity": "transaction",
+      "false_positive_inr": 850.0,
+      "false_negative_inr": 9200.0,
+      "fn_to_fp_ratio": 10.82,
+      "policy": "auto-block permitted at high confidence",
+      "false_positive_effect": "a legitimate high-value transaction is declined",
+      "false_negative_effect": "fraud settles, then arrives as a chargeback",
+      "assumptions": {
+        "false_positive": "~10% of a declined basket's value is lost to abandonment and merchant trust damage; mean flagged basket in the held-out set is roughly Rs 8,500. A declined customer retries elsewhere ~40% of the time and a share never returns.",
+        "false_negative": "full transaction value written off plus a Rs 1,500-2,500 chargeback handling fee; card networks also penalise merchants whose chargeback ratio crosses ~0.9%, which this ignores."
+      }
+    },
+    "ring_detector": {
+      "entity": "account cluster",
+      "false_positive_inr": 4200.0,
+      "false_negative_inr": 31000.0,
+      "fn_to_fp_ratio": 7.38,
+      "policy": "auto-block permitted at high confidence",
+      "false_positive_effect": "a family, office, or shared-device household is locked out together",
+      "false_negative_effect": "a coordinated ring keeps operating",
+      "assumptions": {
+        "false_positive": "the whole cluster is actioned at once, so one wrong call multiplies across every member: ~3-6 accounts x support handling + lost lifetime value. This is the agent where a false positive is least recoverable, because the affected users are unrelated to each other and all get punished.",
+        "false_negative": "a ring is not one loss but a stream: a missed cluster keeps transacting until caught by another control. Sized as ~5 accounts x several transactions before independent detection."
+      }
+    },
+    "content_forensics": {
+      "entity": "document / dispute narrative",
+      "false_positive_inr": 2400.0,
+      "false_negative_inr": 5600.0,
+      "fn_to_fp_ratio": 2.33,
+      "policy": "escalate to a human rather than auto-block \u2014 a wrong block costs too much relative to a miss",
+      "false_positive_effect": "a genuine customer's dispute is wrongly denied",
+      "false_negative_effect": "a fabricated dispute is paid out",
+      "assumptions": {
+        "false_positive": "regulatory and reputational exposure dominates the direct amount: a wrongly denied complaint can escalate to the banking ombudsman, and denying a real victim of fraud a second time is the single worst customer outcome in this system.",
+        "false_negative": "refund value plus handling; AI-generated dispute narratives are cheap to mass-produce, so the real risk is volume rather than any single payout."
+      }
+    }
+  },
+  "applied_to_heldout": {
+    "spike_sentinel": {
+      "fp": 183,
+      "fn": 204,
+      "expected_cost_inr": 2032350.0,
+      "detector": "ensemble (0.7 model + 0.3 rules)"
+    },
+    "ring_detector": {
+      "fp": 244,
+      "fn": 1972,
+      "expected_cost_inr": 62156800.0,
+      "detector": "graph rules only (no LLM verification in this run) (component split)"
+    },
+    "content_forensics": {
+      "fp": 11,
+      "fn": 21,
+      "expected_cost_inr": 144000.0,
+      "detector": "logistic regression"
+    }
+  }
+}

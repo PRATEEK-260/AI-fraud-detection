@@ -1,8 +1,19 @@
-# Day-0 core. Remaining deps (streamlit, anthropic, networkx, python-louvain,
-# textstat, opencv) get added as their agents are built. Pin versions on Day 3
-# per IMPLEMENTATION_PLAN.md §3.
-pandas
-numpy
-scikit-learn
-xgboost
-pyarrow
+# Pinned to what the reported results were produced with (Day 3, per
+# IMPLEMENTATION_PLAN.md §3). Python 3.14.
+#
+# Note on graph clustering: the plan named python-louvain, which is
+# unmaintained. networkx >= 3.0 ships the same Louvain algorithm as
+# nx.community.louvain_communities, so that is used instead.
+pandas==3.0.5
+numpy==2.5.2
+scikit-learn==1.9.0
+xgboost==3.4.1
+pyarrow==25.0.1
+networkx==3.6.1
+textstat==0.7.13
+streamlit==1.63.0
+
+# LLM access. OpenRouter is an OpenAI-compatible gateway, so the openai SDK
+# is the client; the model id selects the provider (Claude by default).
+openai==3.7.0
+python-dotenv==1.2.3
