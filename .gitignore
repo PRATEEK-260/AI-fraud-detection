@@ -22,3 +22,10 @@ __pycache__/
 
 # tests
 .pytest_cache/
+
+# The original pitch/application PDF is kept locally but not shipped: it
+# describes an earlier design (five agents, a Claude-based reasoning stack,
+# synthesised device/IP data) that the code has since moved away from for
+# reasons this README documents. Publishing both would hand a reader two
+# contradictory descriptions of the same system.
+AI-Native_Fraud_Defense_System.pdf

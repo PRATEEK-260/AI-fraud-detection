@@ -392,7 +392,7 @@ python -m pytest tests/ -q     # 21 tests, no data or API needed
 | `vbinh002/fraud-ecommerce` | Ring Detector | **real** `device_id` / `ip_address` columns |
 | self-built, 753 texts | Content Forensics | no public corpus of paired human/AI fraud text exists |
 
-**Deviation from the project doc:** the original write-up proposed
+**Deviation from the original design note:** the first write-up proposed
 *synthesising* device/IP onto Sparkov. That was replaced with a second real
 dataset, because a detector evaluated on fabricated signal measures the
 fabrication. This was a deliberate trade: the ring dataset turned out to be
@@ -464,7 +464,7 @@ Stated plainly, because the evaluation is the point of this submission.
   is not proof of generalisation to a third.
 - **Cost figures are reasoned estimates**, not measured losses.
 - **The reasoning agents run on `openai/gpt-5-nano`**, not Claude as the
-  original project doc's stack table said. That was a budget decision
+  original design note's stack table said. That was a budget decision
   (roughly 20x cheaper per call, and the whole LLM workload cost about
   $0.03). It does not affect the no-self-recognition property — the
   generators are minimax and mistral — and the zero-shot detection result was
