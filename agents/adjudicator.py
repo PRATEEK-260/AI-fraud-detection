@@ -96,7 +96,16 @@ def _signals(case: Case) -> set[str]:
 
 
 def find_conflicts(cases: list[Case]) -> list[dict]:
-    """Locate cases whose evidence argues with itself, or with another agent."""
+    """Locate cases whose evidence argues with itself, or with another agent.
+
+    The adjudicator's own rulings are excluded first. A ruling case carries the
+    same entity_id as the case it ruled on, so leaving them in makes the
+    adjudicator arbitrate itself: on a second run it sees `checkout_guard` and
+    `adjudicator` both attached to one session and reports a cross-agent
+    corroboration that never happened. That inflated cross_agent from 0 to 24
+    on a re-run and would compound every time.
+    """
+    cases = [c for c in cases if c.source_agent != "adjudicator"]
     conflicts: list[dict] = []
 
     # 1. Cross-agent: one entity, two or more agents.

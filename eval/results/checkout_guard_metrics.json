@@ -1,6 +1,6 @@
 {
   "agent": "checkout_guard",
-  "generated_at": "2026-09-04T08:56:41.080659+00:00",
+  "generated_at": "2026-09-04T09:10:27.763026+00:00",
   "DATA_WARNING": "Sessions are SIMULATED by scripts/simulate_sessions.py. No public corpus of AI shopping-agent checkouts exists. The agent-detection metrics below measure the separability of that simulation and must NOT be read as real-world detection performance. The mandate policy engine is deterministic and carries no such caveat.",
   "dataset": {
     "n_sessions": 3000,
@@ -78,7 +78,7 @@
     "thin_fingerprint": "browser fingerprint surface missing or automation user-agent"
   },
   "human_response_floor_ms": 250.0,
-  "signal_ms_per_session": 0.052,
+  "signal_ms_per_session": 0.05,
   "cases_written": 152,
   "decisions": {
     "block": 108,

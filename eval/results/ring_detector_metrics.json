@@ -1,6 +1,6 @@
 {
   "agent": "ring_detector",
-  "generated_at": "2026-09-04T08:56:37.088414+00:00",
+  "generated_at": "2026-09-04T09:10:23.993754+00:00",
   "dataset": {
     "source": "vbinh002/fraud-ecommerce (Fraud_Data.csv)",
     "n_accounts": 151112,
@@ -66,8 +66,8 @@
     "accounts_flagged": 8409,
     "cluster_size_median": 10,
     "cluster_size_max": 20,
-    "build_seconds": 3.95,
-    "cluster_seconds": 0.69
+    "build_seconds": 3.78,
+    "cluster_seconds": 0.64
   },
   "rule_thresholds_train": {
     "device_reuse": 3.0,
@@ -126,7 +126,7 @@
     "clusters_reviewed": 260,
     "clusters_vetoed_legitimate": 0,
     "accounts_removed_by_veto": 0,
-    "seconds_per_cluster": 0.0
+    "seconds_per_cluster": 0.01
   },
   "cases_written": 759,
   "decisions": {

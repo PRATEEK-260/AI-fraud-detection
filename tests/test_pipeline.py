@@ -308,6 +308,17 @@ def test_cross_agent_conflict_is_detected():
     assert "cross_agent" in types
 
 
+def test_adjudicator_does_not_arbitrate_its_own_rulings():
+    """A ruling carries the entity_id of the case it ruled on, so without an
+    explicit exclusion the adjudicator reports itself as a second agent
+    corroborating the first — a false cross_agent conflict that compounds on
+    every re-run."""
+    from agents.adjudicator import find_conflicts
+    source = _case(source_agent="checkout_guard", entity_id="S1")
+    ruling = _case(source_agent="adjudicator", entity_id="S1")
+    assert "cross_agent" not in [c["type"] for c in find_conflicts([source, ruling])]
+
+
 def test_model_only_flag_is_detected_as_a_conflict():
     from agents.adjudicator import find_conflicts
     bare = _case(source_agent="spike_sentinel",
