@@ -1,13 +1,13 @@
 {
   "agent": "adjudicator",
-  "generated_at": "2026-09-04T08:00:52.270757+00:00",
+  "generated_at": "2026-09-04T08:56:45.936004+00:00",
   "design": "rule-triggered LLM arbitration over the audit log; never mutates source cases, appends a ruling case instead",
   "arbiter_model": "openai/gpt-5-nano",
   "cross_agent_selfcheck_passed": true,
-  "cases_read": 3172,
+  "cases_read": 3162,
   "conflicts_found": {
     "agent_within_mandate": 40,
-    "detector_split": 48,
+    "detector_split": 49,
     "model_without_evidence": 461
   },
   "cross_agent_zero_reason": "the three agents run on three different datasets, so no entity_id is observable by more than one agent; the path is implemented and self-checked rather than manufactured by joining unrelated data",
@@ -18,7 +18,7 @@
     "escalate": 5,
     "block": 1
   },
-  "seconds_per_arbitration": 1.99,
+  "seconds_per_arbitration": 0.0,
   "escalate_when_ratio_below": 2.5,
   "hero_case": {
     "conflict_type": "agent_within_mandate",

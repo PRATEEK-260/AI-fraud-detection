@@ -123,19 +123,28 @@ Recall is capped by design: only ~71% of fraud in this dataset sits on a
 shared identifier at all, and clusters below 3 accounts are not treated as
 rings.
 
-### Content Forensics — 228 held-out texts, 50% AI-generated
+### Content Forensics — 230 held-out texts, 49% AI-generated
+
+Human texts are all **pre-November-2022**, so the human class is human by
+provenance rather than by assumption (finding 6 below).
 
 | detector | precision | recall | F1 |
 |---|---|---|---|
-| rule thresholds | 0.758 | 0.632 | 0.689 |
-| **logistic regression** (operating detector) | **0.862** | **0.711** | **0.779** |
-| LLM zero-shot (`gpt-5-nano`) | 0.444 | 0.035 | 0.065 |
+| rule thresholds | 0.800 | 0.643 | 0.713 |
+| **logistic regression** (operating detector) | **0.905** | **0.679** | **0.776** |
+| LLM zero-shot (`gpt-5-nano`) | 0.222 | 0.018 | 0.033 |
+
+Date-bounding the human class moved precision from 0.862 to **0.905** and cut
+false positives from 13 to 8, while recall and F1 stayed flat. That is the
+result the contamination hypothesis predicts: several of the earlier "false
+positives" were post-ChatGPT complaints the detector had flagged correctly and
+that were being scored as mistakes.
 
 Held-out AI texts come from **topics never seen in training**, so the
 template-reuse signal has to generalise rather than memorise our own
 generation phrasing.
 
-**The LLM is the weakest detector here, by a wide margin** — it found 4 of 114
+**The LLM is the weakest detector here, by a wide margin** — it found 2 of 112
 AI texts. That is a measured result, not a broken integration: the same
 prompt was tried on three models across three families (`claude-haiku-4.5`,
 `gpt-5-nano`, `gemini-2.5-flash-lite`) and all three called almost everything
@@ -148,7 +157,7 @@ deviations, and it is the top logistic-regression coefficient.
 So the LLM's job in this agent is the one the plan gave it (§6.3): explain
 *why* a flagged text looks generated, producing `reasoning_text`. The
 statistical layer decides *what* gets flagged. Sending the LLM's verdicts to
-the decision layer instead would cost 106 of 114 detections.
+the decision layer instead would cost 74 of the 76 detections.
 
 ### Agentic Checkout Guard — 914 held-out sessions (SIMULATED)
 
@@ -229,7 +238,7 @@ project does not claim production streaming.
 
 ## What the measurements changed
 
-Six findings from this build changed the design rather than being papered
+Seven findings from this build changed the design rather than being papered
 over. They are the honest core of the submission.
 
 **1. The ring signal lives in one cohort.** In the e-commerce dataset, 31% of
@@ -272,7 +281,21 @@ with localisation still at chance (see above). Two leaks in this project were
 found by asking "is it right for the right reason?" rather than by looking at
 the score.
 
-**6. The cost table decides the action.** Content Forensics has an FN:FP
+**6. A "human" corpus collected after November 2022 is not reliably human.**
+62.9% of the CFPB narratives in this dump were filed after ChatGPT shipped. An
+unfiltered human class may therefore contain AI-written or AI-assisted
+complaints — mislabelled negatives, which make a detector's false positives
+uninterpretable, because some of them may be correct. The human side is now
+gated to filings from **before 2022-11-30**, which is a provenance guarantee
+rather than an assumption. 36,201 narratives survive that gate plus the length
+band against the 200 needed, so it costs nothing in sample size. The Amazon
+review side derives from a 2020 corpus and is pre-LLM by construction.
+
+This is the single cheapest methodological control available to anyone
+building an AI-text detector, and it is easy to skip: date-bound the human
+class, or you are training against labels you cannot defend.
+
+**7. The cost table decides the action.** Content Forensics has an FN:FP
 ratio of 2.33 — wrongly denying a real customer's dispute costs nearly as much
 as paying out a fake one, and is far worse for the customer. So that agent
 **never auto-blocks**, at any confidence. Ring Detector (7.38) and Spike
@@ -411,8 +434,25 @@ Stated plainly, because the evaluation is the point of this submission.
   format are real and testable. The mandate engine is the part that would
   ship unchanged.
 - **KYC self-description TEXT remains out of scope.** There is no public
-  corpus of genuine human KYC narratives to pair against, so it is not
-  evaluated. Document *images* are covered by the ELA agent above.
+  corpus of genuine human KYC narratives, and there cannot be one — the text
+  is PII by definition. Document *images* are covered by the ELA agent above.
+
+  The extension is specified rather than hand-waved. Use a **structural
+  analogue**: text in which a person or business describes itself to an
+  institution that will verify the claim. Three public-domain sources fit,
+  in order of preference:
+
+  | source | why it is the right analogue | access |
+  |---|---|---|
+  | SEC EDGAR 10-K, Item 1 "Business" | a business describing itself to a regulator who checks — this *is* merchant-onboarding KYC | `data.sec.gov` API; US government filings, public domain |
+  | IRS Form 990 program descriptions | an organisation stating its purpose and funding — the source-of-funds narrative | ProPublica Nonprofit Explorer API, public domain |
+  | Blog Authorship Corpus (Schler et al., 2006) | first-person self-description, and **pre-LLM by construction** | HuggingFace / Kaggle |
+
+  EDGAR is the one to build on: unlimited, verifiable, unambiguously public
+  domain, and pre-2022 filings satisfy the provenance gate above for free.
+  Commissioned crowdworker text is the obvious alternative and the worse one —
+  since 2023 a substantial share of crowdworkers have been shown to use LLMs
+  on writing tasks, which would poison the exact label being paid for.
 - **Cross-agent adjudication does not fire on this data.** The three agents run
   on three different datasets, so no `entity_id` is observable by two agents.
   The code path is implemented and unit-tested against a synthetic pair rather

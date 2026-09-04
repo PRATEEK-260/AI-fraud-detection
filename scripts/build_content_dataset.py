@@ -184,12 +184,32 @@ def load_human_reviews(n: int) -> pd.DataFrame:
     })
 
 
+# ChatGPT's public release. Text collected after this date cannot be assumed
+# human-written, however it is labelled.
+LLM_ERA_START = "2022-11-30"
+
+
 def load_human_disputes(n: int) -> pd.DataFrame:
     df = pd.read_parquet(
         CORPUS_DIR / "complaints.parquet",
-        columns=["Complaint ID", "Consumer complaint narrative", "Product"],
+        columns=["Complaint ID", "Consumer complaint narrative", "Product",
+                 "Date received"],
     )
     df = df.dropna(subset=["Consumer complaint narrative"])
+
+    # PROVENANCE GATE. The human class needs a guarantee, not an assumption.
+    # 62.9% of CFPB narratives in this dump were received after ChatGPT shipped,
+    # so an unfiltered "human" sample may contain AI-written or AI-assisted
+    # complaints — mislabelled negatives that make a detector's false positives
+    # uninterpretable (some of them might be correct). Restricting to
+    # pre-release filings is the only cheap way to be certain the human class
+    # is human. 36,201 narratives survive this plus the length band, against
+    # the 200 needed, so it costs nothing in sample size.
+    before = len(df)
+    df["Date received"] = pd.to_datetime(df["Date received"], errors="coerce")
+    df = df[df["Date received"] < LLM_ERA_START]
+    print(f"  provenance gate: {before:,} -> {len(df):,} narratives filed "
+          f"before {LLM_ERA_START} (pre-LLM, so certainly human-written)")
     df = df.rename(columns={"Consumer complaint narrative": "narrative",
                             "Complaint ID": "cid"})
     # CFPB redacts PII as runs of X. The first version of this loader mapped

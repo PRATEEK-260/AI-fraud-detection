@@ -1,6 +1,6 @@
 {
   "agent": "document_forensics",
-  "generated_at": "2026-09-04T08:00:03.876716+00:00",
+  "generated_at": "2026-09-04T08:56:45.202774+00:00",
   "DATA_WARNING": "Documents are SYNTHETIC specimens rendered by scripts/make_documents.py; no real identity documents were used. The tampering is genuine image manipulation, so the ELA artifact is a real JPEG codec effect \u2014 but these scores demonstrate a correct ELA implementation against splice-and-resave tampering, NOT robustness against a forger who re-encodes the whole document uniformly, which erases the signal. ELA is a cheap first filter, never a sole control.",
   "method": {
     "technique": "Error Level Analysis",
@@ -41,6 +41,6 @@
   },
   "hotspot_localisation_rate": 0.3333,
   "hotspot_localisation_note": "Share of tampered held-out documents where the highest-residual tile lands on the edited field. Guards against scoring well for the wrong reason.",
-  "ela_ms_per_document": 13.0,
+  "ela_ms_per_document": 13.38,
   "cases_written": 43
 }

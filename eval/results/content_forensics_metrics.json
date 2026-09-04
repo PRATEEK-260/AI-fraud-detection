@@ -1,10 +1,10 @@
 {
   "agent": "content_forensics",
-  "generated_at": "2026-09-04T07:59:58.328616+00:00",
+  "generated_at": "2026-09-04T08:56:39.491949+00:00",
   "dataset": {
-    "n_total": 753,
-    "n_train": 525,
-    "n_heldout": 228,
+    "n_total": 769,
+    "n_train": 539,
+    "n_heldout": 230,
     "heldout_fraction_groups": 0.3,
     "split": "group-based for AI (unseen topics), hashed-id for human",
     "generator_models": [
@@ -19,72 +19,72 @@
   },
   "results": {
     "rule_threshold": {
-      "precision": 0.7579,
-      "recall": 0.6316,
-      "f1": 0.689,
+      "precision": 0.8,
+      "recall": 0.6429,
+      "f1": 0.7129,
       "tp": 72,
-      "fp": 23,
-      "fn": 42,
-      "tn": 91
+      "fp": 18,
+      "fn": 40,
+      "tn": 100
     },
     "logistic_regression": {
-      "precision": 0.8617,
-      "recall": 0.7105,
-      "f1": 0.7788,
-      "tp": 81,
-      "fp": 13,
-      "fn": 33,
-      "tn": 101,
-      "pr_auc": 0.8946
+      "precision": 0.9048,
+      "recall": 0.6786,
+      "f1": 0.7755,
+      "tp": 76,
+      "fp": 8,
+      "fn": 36,
+      "tn": 110,
+      "pr_auc": 0.9046
     },
     "llm_zeroshot": {
-      "precision": 0.4444,
-      "recall": 0.0351,
-      "f1": 0.065,
-      "tp": 4,
-      "fp": 5,
+      "precision": 0.2222,
+      "recall": 0.0179,
+      "f1": 0.0331,
+      "tp": 2,
+      "fp": 7,
       "fn": 110,
-      "tn": 109,
-      "mean_confidence": 0.604,
-      "n_evaluated": 228,
-      "n_heldout_total": 228
+      "tn": 111,
+      "mean_confidence": 0.605,
+      "n_evaluated": 230,
+      "n_heldout_total": 230
     }
   },
   "rule_thresholds": {
-    "burstiness_floor": 0.143,
-    "fk_grade_ceiling": 13.63,
+    "burstiness_floor": 0.152,
+    "fk_grade_ceiling": 13.73,
     "template_reuse_threshold": 0.233
   },
   "signal_separation_heldout": {
-    "burstiness": -0.375,
-    "mattr": 0.524,
-    "flesch_reading_ease": 0.022,
-    "flesch_kincaid_grade": -0.095,
-    "exclamation_rate": -0.009,
-    "caps_ratio": -0.176,
-    "first_person_rate": 0.239,
-    "avg_word_len": 0.316,
-    "mean_sentence_len": -0.1,
-    "n_sentences": 0.048,
-    "template_reuse_score": 1.092
+    "burstiness": -0.246,
+    "mattr": 0.482,
+    "flesch_reading_ease": 0.004,
+    "flesch_kincaid_grade": -0.06,
+    "exclamation_rate": -0.054,
+    "caps_ratio": -0.246,
+    "first_person_rate": 0.143,
+    "avg_word_len": 0.399,
+    "mean_sentence_len": -0.106,
+    "n_sentences": 0.092,
+    "template_reuse_score": 1.164
   },
   "timing": {
     "signal_ms_per_text": 0.6,
     "llm_s_per_text": 0.0
   },
-  "cases_written": 94,
+  "cases_written": 84,
   "case_flag_source": "logistic_regression",
   "lr_coefficients": {
-    "burstiness": -0.208,
-    "mattr": 0.645,
-    "flesch_reading_ease": 0.68,
-    "flesch_kincaid_grade": 0.287,
-    "exclamation_rate": -0.084,
-    "caps_ratio": -0.486,
-    "first_person_rate": 0.509,
-    "avg_word_len": 0.874,
-    "mean_sentence_len": -0.269,
-    "n_sentences": 0.184,
-    "template_reuse_score": 2.235
+    "burstiness": -0.093,
+    "mattr": 0.844,
+    "flesch_reading_ease": 0.897,
+    "flesch_kincaid_grade": 0.654,
+    "exclamation_rate": -0.049,
+    "caps_ratio": -0.918,
+    "first_person_rate": 0.43,
+    "avg_word_len": 0.9,
+    "mean_sentence_len": -0.28,
+    "n_sentences": 0.238,
+    "template_reuse_score": 2.319
   }
 }
