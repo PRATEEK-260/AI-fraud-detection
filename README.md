@@ -94,6 +94,15 @@ event bus — that six specialist agents write into, and one dashboard reads.
 The audit log is **append-only**. The adjudicator never rewrites a case; it
 appends its ruling next to the original, so the disagreement stays visible.
 
+The dashboard's claim is that evidence is *readable*, and the first version only
+made good on that for someone who already knew what precision and P(fraud) meant
+— which is not who reads a risk desk. Every term the agents emit now carries a
+plain-English twin from `dashboard/plain_english.py`: each evidence signal as a
+sentence, each score as *"of every 100 it flagged, about 91 really were fraud"*,
+each cost ratio as the reason that agent is or is not allowed to block. The
+original value stays on screen beside the translation, because a translation you
+cannot check against the source is just another claim.
+
 ---
 
 ## Results (held-out)
@@ -333,7 +342,7 @@ cp .env.example .env      # add OPENROUTER_API_KEY for the LLM layers
 ```
 
 **What ships in this repo, and what you must download.** The audit log
-(`data/cases.db`, 2,997 real cases), the self-built Content Forensics corpus,
+(`data/cases.db`, 3,186 real cases), the self-built Content Forensics corpus,
 and the frozen-split summary are committed, so this works immediately with no
 downloads and no API key:
 
@@ -490,6 +499,7 @@ agents/      spike_sentinel, ring_detector, content_forensics,
 eval/        metrics, cost table + the decision policy, results/*.json
 scripts/     prepare_data (split freeze), build_content_dataset,
              simulate_sessions, make_documents
-dashboard/   Streamlit risk desk
-tests/       27 regression tests, one per bug that shipped
+dashboard/   Streamlit risk desk (app.py) + plain_english.py, which gives
+             every term the agents emit a non-specialist twin
+tests/       28 regression tests, one per bug that shipped
 ```
