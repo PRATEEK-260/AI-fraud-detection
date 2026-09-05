@@ -33,3 +33,10 @@ AI-Native_Fraud_Defense_System.pdf
 # Personal recording aid, not submission material — a teleprompter script
 # with stage directions is clutter in a repo a judge is reading.
 DEMO_SCRIPT.md
+
+# Pitch artifacts — delivered with the submission, not part of the repo a judge reads.
+# Regenerate:  .venv/bin/python scripts/build_pitch_deck.py
+#              .venv/bin/python scripts/build_recording_guide.py
+PITCH_DECK.pptx
+scripts/build_pitch_deck.py
+scripts/build_recording_guide.py
