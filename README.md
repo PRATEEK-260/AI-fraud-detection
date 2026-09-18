@@ -1,5 +1,16 @@
 # AI-Native Fraud Defense System
 
+**TL;DR:** A 6-agent fraud defense system that gives every decision an evidence-backed case file — never auto-blocking on a bare score. Built solo for the Razorpay AI Buildathon.
+
+**0.914** precision · **0.905** recall (555K held-out transactions) · **0.907** precision (fraud-ring detection)
+
+![Dashboard](docs/dashboard.png)
+
+
+```bash
+streamlit run dashboard/app.py  # opens with real cases, no API key needed
+```
+
 A multi-agent risk desk for fraud in the AI era. Every decision produces an
 **evidence-backed case file**, not a bare score — and a decision with no
 human-readable evidence behind it is never allowed to auto-block.
